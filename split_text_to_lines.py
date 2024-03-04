@@ -1,6 +1,6 @@
 import json
 
-from moviepy.editor import TextClip, CompositeVideoClip, concatenate_videoclips,AudioFileClip, ColorClip
+from moviepy.editor import TextClip, CompositeVideoClip, concatenate_videoclips, AudioFileClip, ColorClip, ImageClip
 
 import numpy as np
 
@@ -11,7 +11,14 @@ import numpy as np
 # with open('data.json', 'w') as f:
 #     json.dump(wordlevel_info, f,indent=4)
 
-with open('data.json', 'r') as f:
+"""
+  TODO: I need to get a JSON file that corresponds to each wav output.
+  This JSON should contain the start and end of each word.
+  I'm currently limited to the main data.json file, which is of the entire 3 minute recording.
+"""
+# local_whisper-0.json
+# with open('data.json', 'r') as f:
+with open('local_whisper-0.json', 'r') as f:
     wordlevel_info_modified = json.load(f)
 
 def split_text_into_lines(data):
@@ -78,9 +85,9 @@ def split_text_into_lines(data):
     return subtitles
 
 
-def create_caption(textJSON, framesize,font = "Helvetica-Bold",fontsize=80, color='white', bgcolor='blue'):
+def create_caption(textJSON, framesize, font="Helvetica-Bold", fontsize=120, color='white', bgcolor='blue', logo_size=(100, 100)):
     wordcount = len(textJSON['textcontents'])
-    full_duration = textJSON['end']-textJSON['start']
+    full_duration = textJSON['end'] - textJSON['start']
 
     word_clips = []
     xy_textclips_positions =[]
@@ -96,13 +103,13 @@ def create_caption(textJSON, framesize,font = "Helvetica-Bold",fontsize=80, colo
     space_width = ""
     space_height = ""
 
-    for index,wordJSON in enumerate(textJSON['textcontents']):
-      duration = wordJSON['end']-wordJSON['start']
+    for index, wordJSON in enumerate(textJSON['textcontents']):
+      duration = wordJSON['end'] - wordJSON['start']
       word_clip = TextClip(wordJSON['word'], font = font,fontsize=fontsize, color=color).set_start(textJSON['start']).set_duration(full_duration)
-      word_clip_space = TextClip(" ", font = font,fontsize=fontsize, color=color).set_start(textJSON['start']).set_duration(full_duration)
+      word_clip_space = TextClip(" ", font=font, fontsize=fontsize, color=color).set_start(textJSON['start']).set_duration(full_duration)
       word_width, word_height = word_clip.size
       space_width,space_height = word_clip_space.size
-      if x_pos + word_width+ space_width > frame_width-2*x_buffer:
+      if x_pos + word_width + space_width > frame_width-2 * x_buffer:
             # Move to the next line
             x_pos = 0
             y_pos = y_pos+ word_height+40
@@ -142,12 +149,18 @@ def create_caption(textJSON, framesize,font = "Helvetica-Bold",fontsize=80, colo
 
 
       word_clips.append(word_clip)
-      word_clips.append(word_clip_space)  
+      word_clips.append(word_clip_space)
 
 
     for highlight_word in xy_textclips_positions:
-      
-      word_clip_highlight = TextClip(highlight_word['word'], font = font,fontsize=fontsize, color=color,bg_color = bgcolor).set_start(highlight_word['start']).set_duration(highlight_word['duration'])
+      word_clip_highlight = TextClip(
+        highlight_word['word'], 
+        font=font,
+        fontsize=fontsize,
+        color=color,
+        bg_color=bgcolor,
+        align='center'
+      ).set_start(highlight_word['start']).set_duration(highlight_word['duration'])
       word_clip_highlight = word_clip_highlight.set_position((highlight_word['x_pos'], highlight_word['y_pos']))
       word_clips.append(word_clip_highlight)
 
@@ -156,30 +169,39 @@ def create_caption(textJSON, framesize,font = "Helvetica-Bold",fontsize=80, colo
 
 linelevel_subtitles = split_text_into_lines(wordlevel_info_modified)
 
-frame_size = (1080,1080)
+frame_size = (1080, 1920)
 
-all_line_level_splits=[]
+all_line_level_splits = []
 
 for line in linelevel_subtitles:
-  out = create_caption(line,frame_size)
+  out = create_caption(line, frame_size)
   all_line_level_splits.extend(out)
 
 
 # Load the input video
-input_audio = AudioFileClip('split_17.wav')
+input_audio = AudioFileClip('split_17_output-0.wav')
 # Get the duration of the input video
 input_audio_duration = input_audio.duration
 # Create a color clip with the given frame size, color, and duration
 background_clip = ColorClip(size=frame_size, color=(0, 0, 0)).set_duration(input_audio_duration)
 
+logo_path = 'logo.png'  # Path to your logo image
+logo_clip = ImageClip(logo_path).set_duration(input_audio_duration)
+
+# Position the logo on the background clip, for example, at the bottom right corner
+logo_x = frame_size[0] - logo_clip.size[0] - 10  # Adjust the X position as needed
+logo_y = frame_size[1] - logo_clip.size[1] - 10  # Adjust the Y position as needed
+logo_clip = logo_clip.set_position((logo_x, logo_y))
+
+background_with_logo = CompositeVideoClip([background_clip])
+
 # If you want to overlay this on the original video uncomment this and also change frame_size, font size and color accordingly.
 # final_video = CompositeVideoClip([input_video] + all_linelevel_splits)
 
-final_video = CompositeVideoClip([background_clip] + all_line_level_splits)
+final_video = CompositeVideoClip([background_with_logo] + all_line_level_splits)
 
 # Set the audio of the final video to be the same as the input video
 final_video = final_video.set_audio(input_audio)
 
 # Save the final clip as a video file with the audio included
-final_video.write_videofile("output.mp4", fps=24, codec="libx264", audio_codec="aac")
-
+final_video.write_videofile("output-0.mp4", fps=24, codec="libx264", audio_codec="aac")

@@ -28,7 +28,6 @@ response = client.chat.completions.create(
 
 gpt_json = response.choices[0].message.content
 
-print(gpt_json)
 
 with open('chat_response.json', 'w') as f:
     f.write(gpt_json)
