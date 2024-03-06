@@ -4,6 +4,7 @@ This extracts three key points from the provided text and returns it in
 JSON format.
 """
 
+import json
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -21,9 +22,6 @@ def chat_with_chatGPT(transcript_text):
 
   """
 
-  # with open('split_17.txt', 'r') as file:
-  #     transcript_text = file.read()
-
   response = client.chat.completions.create(
     model="gpt-3.5-turbo-0125",
     response_format={ "type": "json_object" },
@@ -39,4 +37,4 @@ def chat_with_chatGPT(transcript_text):
   with open('chat_response.json', 'w') as f:
       f.write(gpt_json)
 
-  return gpt_json
+  return json.loads(gpt_json)

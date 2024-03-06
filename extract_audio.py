@@ -19,7 +19,7 @@ def extract_audio_segment(file_path, start_time, end_time, output_file):
     print(start_time, start_time_ms)
 
     # Load the audio file
-    audio = AudioSegment.from_file(file_path)
+    audio = AudioSegment.from_file(f'{file_path}.wav')
 
     # Extract the specified segment
     extracted_segment = audio[start_time_ms:end_time_ms]

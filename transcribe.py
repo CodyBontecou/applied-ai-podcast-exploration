@@ -36,10 +36,9 @@ def transcribe_audio_file(file_name):
       device=device
   )
 
-
   result = pipe(f'{file_name}.wav')
 
   with open(f'{file_name}.txt', 'w') as f:
-      f.write(result)
+      f.write(str(result))
   
   return result

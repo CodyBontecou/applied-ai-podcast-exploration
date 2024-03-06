@@ -16,7 +16,7 @@ with the data structure:
 import json
 import whisper
 
-def generate_json_segments(audio_file):
+def generate_json_segments(audio_file, i):
   model = whisper.load_model("medium")
   result = model.transcribe(audio_file, word_timestamps=True)
 
@@ -29,7 +29,7 @@ def generate_json_segments(audio_file):
 
 
   # replaces the audio file's .wav extension with .json
-  with open(f'{audio_file.replace(".wav", ".json")}', 'w') as f:
+  with open(f'{i}-{audio_file.replace(".wav", ".json")}', 'w') as f:
       json.dump(wordlevel_info, f, indent=4)
 
   return wordlevel_info
