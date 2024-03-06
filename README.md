@@ -1,0 +1,1 @@
+transcribe.py -> chat.py -> extract_audio.py -> local_whisper.py -> split_text_to_lines.py

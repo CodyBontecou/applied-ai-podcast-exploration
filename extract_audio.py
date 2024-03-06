@@ -26,12 +26,3 @@ def extract_audio_segment(file_path, start_time, end_time, output_file):
 
     # Save the extracted segment to a new file
     extracted_segment.export(output_file, format="wav")
-
-
-with open('chat_response.json', 'r') as f:
-    data = json.load(f)
-
-
-for i in range(3):
-  segment = data['segments'][i]
-  extract_audio_segment('split_17.wav', segment['start'], segment['end'], f'split_17_output-{i}.wav')
